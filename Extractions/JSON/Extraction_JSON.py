@@ -5,8 +5,6 @@ import time
 # SparkSession
 spark = SparkSession.builder.appName("JSON to HDFS").getOrCreate()
 
-start = time.time()
-
 # read JSON file into a DataFrame
 df = spark.read.option("inferSchema", "true").option("header", "true").option("multiline","true").json("Employees.json")
 
@@ -20,10 +18,7 @@ df = df.select(
     when(col("age").isNull(), 30).otherwise(col("age")).alias("age"),
     when(col("department").isNull(), "Unspecified").otherwise(col("department")).alias("department"),
     *[ when(col(colu).isNull(), "N/A").otherwise(col(colu)).alias(colu) for colu in df.columns if colu not in ["name", "age", "department"] ]
-)
-
-end = time.time()
-print(" HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY " + str(end - start) )
+).show()
 
 # write the DataFrame to HDFS
 df.write\

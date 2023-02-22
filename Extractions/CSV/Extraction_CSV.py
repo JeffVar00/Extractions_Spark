@@ -1,11 +1,8 @@
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as func
-import time
 
 # SparkSession
 spark = SparkSession.builder.appName("CSV to HDFS").getOrCreate()
-
-start = time.time()
 
 # read CSV file into a DataFrame
 df = spark.read.csv("Friends.csv", header=True, inferSchema=True)
@@ -16,10 +13,7 @@ df.show()
 
 # fill null values with default value
 df = df.fillna(value="Unknown", subset=["name"]).fillna(value=30, subset=["age"])
-df = df.fillna("N/A")
-
-end = time.time()
-print(" HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY " + str(end - start) )
+df = df.fillna("N/A").show()
 
 # transformation example
 output = df.select(df.userID,df.name\

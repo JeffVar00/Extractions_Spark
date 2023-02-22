@@ -1,11 +1,8 @@
 from pyspark.sql import SparkSession
 import pandas as pd
-import time
 
 # SparkSession
 spark = SparkSession.builder.appName("CSV/Pandas to HDFS").getOrCreate()
-
-start = time.time()
 
 # read JSON file into a DataFrame using pandas
 df = pd.read_csv("Friends.csv")
@@ -28,9 +25,6 @@ df.fillna(value="N/A", inplace=True)
 
 # show if there is any missing values
 print(df.isnull().sum())
-
-end = time.time()
-print(" HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY " + str(end - start) )
 
 # transform into a spark dataframe to upload it to HDFS
 df_spark = spark.createDataFrame(df)
