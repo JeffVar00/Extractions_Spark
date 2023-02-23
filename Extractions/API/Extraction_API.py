@@ -1,7 +1,7 @@
 import requests
 from pyspark.sql import SparkSession
 
-spark = SparkSession.builder.appName("API to HDFS").getOrCreate().master("spark://localhost:7077")
+spark = SparkSession.builder.appName("API to HDFS").master("spark://localhost:7077").getOrCreate()
 
 url = "https://api.covid19api.com/summary"
 response = requests.get(url)

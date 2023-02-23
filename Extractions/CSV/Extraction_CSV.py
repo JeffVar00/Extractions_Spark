@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 import pyspark.sql.functions as func
 
 # SparkSession
-spark = SparkSession.builder.appName("CSV to HDFS").getOrCreate().master("spark://localhost:7077")
+spark = SparkSession.builder.appName("CSV to HDFS").master("spark://localhost:7077").getOrCreate()
 
 # read CSV file into a DataFrame
 df = spark.read.csv("Friends.csv", header=True, inferSchema=True)
@@ -13,7 +13,7 @@ df.show()
 
 # fill null values with default value
 df = df.fillna(value="Unknown", subset=["name"]).fillna(value=30, subset=["age"])
-df = df.fillna("N/A").show()
+df = df.fillna("N/A")
 
 # transformation example
 output = df.select(df.userID,df.name\

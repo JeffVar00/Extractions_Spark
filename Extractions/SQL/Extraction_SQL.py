@@ -1,11 +1,11 @@
 from pyspark.sql import SparkSession
 import time
 
-spark = SparkSession.builder.appName("SQL to HDFS").getOrCreate().master("spark://localhost:7077")
+spark = SparkSession.builder.appName("SQL to HDFS").master("spark://localhost:7077").getOrCreate()
 
 start = time.time()
 
-jdbcURL = "jdbc:sqlserver://172.17.80.1:1433;databaseName=AdventureWorks2019"
+jdbcURL = "jdbc:sqlserver://172.19.128.1:1433;databaseName=AdventureWorks2019"
 table = 'Person.Address'
 user = 'jeff'
 pwd = '1234'
@@ -22,16 +22,16 @@ df.printSchema()
 df.show(10)
 
 # create a column with the number of nulls in each row
-null_cols = [df[col].isNull().alias(col+"_null") for col in df.columns]
+# null_cols = [df[col].isNull().alias(col + "_null") for col in df.columns]
 
 # create a dataframe with the number of nulls in each column
-null_counts = df.select(null_cols).agg(*[sum(col).alias(col+"_null_count") for col in df.columns])
+# null_counts = df.select(null_cols).agg(*[sum(col).alias(col + "_null_count") for col in df.columns])
 
 # show the dataframe with the number of nulls in each column
-null_counts.select([col for col in null_counts.columns if 'null_count' in col]).show()
+# null_counts.select([col for col in null_counts.columns if 'null_count' in col]).show()
 
 # pyspark version for dropping columns with nulls
-df.na.drop(how='any').show()
+df = df.na.drop(how='any')
 
 end = time.time()
 print(" HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY " + str(end - start) )

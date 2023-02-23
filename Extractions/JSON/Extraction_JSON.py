@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import when, col
 
 # SparkSession
-spark = SparkSession.builder.appName("JSON to HDFS").getOrCreate().master("spark://localhost:7077")
+spark = SparkSession.builder.appName("JSON to HDFS").master("spark://localhost:7077").getOrCreate()
 
 # read JSON file into a DataFrame
 df = spark.read.option("inferSchema", "true").option("header", "true").option("multiline","true").json("Employees.json")
@@ -17,7 +17,7 @@ df = df.select(
     when(col("age").isNull(), 30).otherwise(col("age")).alias("age"),
     when(col("department").isNull(), "Unspecified").otherwise(col("department")).alias("department"),
     *[ when(col(colu).isNull(), "N/A").otherwise(col(colu)).alias(colu) for colu in df.columns if colu not in ["name", "age", "department"] ]
-).show()
+)
 
 # write the DataFrame to HDFS
 df.write\
