@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 import pyspark.sql.functions as func
 
 # SparkSession
-spark = SparkSession.builder.appName("CSV to HDFS").getOrCreate()
+spark = SparkSession.builder.appName("CSV to HDFS").getOrCreate().master("spark://localhost:7077")
 
 # read CSV file into a DataFrame
 df = spark.read.csv("Friends.csv", header=True, inferSchema=True)

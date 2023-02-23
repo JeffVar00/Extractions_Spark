@@ -1,9 +1,8 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import when, col
-import time
 
 # SparkSession
-spark = SparkSession.builder.appName("JSON to HDFS").getOrCreate()
+spark = SparkSession.builder.appName("JSON to HDFS").getOrCreate().master("spark://localhost:7077")
 
 # read JSON file into a DataFrame
 df = spark.read.option("inferSchema", "true").option("header", "true").option("multiline","true").json("Employees.json")
