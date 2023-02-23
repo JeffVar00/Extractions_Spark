@@ -1,42 +1,40 @@
 from pyspark.sql import SparkSession
-import pandas as pd
-import time
+from pyspark.sql.functions import pandas_udf, PandasUDFType
 
 # SparkSession
 spark = SparkSession.builder.appName("JSON/Pandas to HDFS").master("spark://localhost:7077").getOrCreate()
 
-start = time.time()
-
 # read JSON file into a DataFrame using pandas
-df = pd.read_json("Employees.json")
+# df = pd.read_json("Employees.json")
 
-# show the dataframe, the first 10 values
-print(df.head(10))
+def transform_df(df):
 
-# show if there is any missing values
-print(df.isnull().sum())
+    print(df.head(10))
+    print(df.isnull().sum())
 
-# replace null values in specific columns with a default value
-default_values = {'name' : "Unknown", "department": 'Unspecified'}
-df.fillna(value=default_values, inplace=True)
+    # replace null values in specific columns with a default value
+    default_values = {'name' : "Unknown", "department": 'Unspecified'}
+    df.fillna(value=default_values, inplace=True)
 
-# fill the missing values in the age column with the mean of that column, you can use also Min and Max.
-df["age"].fillna(value=df["age"].mean(numeric_only=True), inplace=True)
+    # fill the missing values in the age column with the mean of that column, you can use also Min and Max.
+    df["age"].fillna(value=df["age"].mean(numeric_only=True), inplace=True)
 
-# fill the rest of the columns with a N/A value
-df.fillna(value="N/A", inplace=True)
+    # fill the rest of the columns with a N/A value
+    df.fillna(value="N/A", inplace=True)
 
-# show if there is any missing values
-print(df.isnull().sum())
+    print(df.isnull().sum())
 
-end = time.time()
-print(" HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY " + str(end - start) )
+    return df
 
-# transform into a spark dataframe to upload it to HDFS
-df_spark = spark.createDataFrame(df)
+df = spark.read.option("inferSchema", "true").option("header", "true").option("multiline","true").json("Employees.json")
 
-# write the DataFrame to HDFS
-df_spark.write\
+@pandas_udf(df.schema, functionType=PandasUDFType.GROUPED_MAP)
+def transform_df_to_udf(pdf):
+    return transform_df(pdf)
+
+df = df.apply(transform_df_to_udf)
+
+df.write\
 .format("parquet").mode("overwrite")\
 .option("path", "hdfs://localhost:9000/user/hadoop_ADMIN/spark/JSON_to_parquet/")\
 .partitionBy("department")\
