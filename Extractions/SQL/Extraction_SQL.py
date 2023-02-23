@@ -1,9 +1,6 @@
 from pyspark.sql import SparkSession
-import time
 
 spark = SparkSession.builder.appName("SQL to HDFS").master("spark://localhost:7077").getOrCreate()
-
-start = time.time()
 
 jdbcURL = "jdbc:sqlserver://172.19.128.1:1433;databaseName=AdventureWorks2019"
 table = 'Person.Address'
@@ -32,9 +29,6 @@ df.show(10)
 
 # pyspark version for dropping columns with nulls
 df = df.na.drop(how='any')
-
-end = time.time()
-print(" HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY " + str(end - start) )
 
 df.write\
 .format("parquet").mode("overwrite")\

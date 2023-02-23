@@ -1,69 +1,58 @@
 from pyspark.sql import SparkSession
 import pyodbc
-import pandas as pd
-import time
+from pyspark.sql.functions import pandas_udf, PandasUDFType
+
 #from sqlalchemy import create_engine, text
 
 spark = SparkSession.builder.appName("SQL/Pandas to HDFS").master("spark://localhost:7077").getOrCreate()
 
-start = time.time()
+def transformation_df(df):
+    # show the dataframe, the first 10 values
+    print(df.head(10))
 
-"""
-username='jeff'
-password='1234'
-host='172.17.80.1'
-port='1433'
-database= 'AdventureWorks2019'
+    # show if there is any missing values
+    print(df.isnull().sum())
 
-url = 'mssql+pyodbc://{user}:{passwd}@{host}:{port}/{db}?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes'.format(user=username, passwd=password, host=host, port=port, db=database)
+    # pandas version
+    df.dropna(how='any', inplace=True)
 
-# establishing the connection to the database using engine as an interface
-engine = create_engine(url)
+    # axis ->
+    #   0 or ‘index’ : Drop rows which contain missing values.
+    #   1 or ‘columns’ : Drop columns which contain missing value.
+    #
+    # how ->
+    #   ‘any’ : If any NA values are present, drop that row or column.
+    #   ‘all’ : If all values are NA, drop that row or column.
 
-with engine.begin() as connection: 
-    df = pd.read_sql(text('SELECT * FROM Person.Address'), connection)
-"""
+    print(df.isnull().sum())
 
-# Some other example server values are
-# server = 'localhost\sqlexpress' # for a named instance
-# server = 'myserver,port' # to specify an alternate port
-server = '172.17.80.1,1433' 
-database = 'AdventureWorks2019' 
-username = 'jeff' 
-password = '1234'  
-cnxn = pyodbc.connect('DRIVER={ODBC Driver 18 for SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password + ';TrustServerCertificate=yes;')
-cursor = cnxn.cursor()
+    return df
 
 
-query = "SELECT AddressID, AddressLine1, AddressLine2, City, StateProvinceID, PostalCode, ModifiedDate FROM Person.Address;"
-df = pd.read_sql(query, cnxn)
+jdbcURL = "jdbc:sqlserver://172.19.128.1:1433;databaseName=AdventureWorks2019"
+table = 'Person.Address'
+user = 'jeff'
+pwd = '1234'
+df = spark.read.format("jdbc")\
+    .option('driver', 'com.microsoft.sqlserver.jdbc.SQLServerDriver')\
+    .option('url', jdbcURL)\
+    .option('dbtable', table)\
+    .option('user', user)\
+    .option('password', pwd)\
+    .load()
 
-# show the dataframe, the first 10 values
-print(df.head(10))
 
-# show if there is any missing values
-print(df.isnull().sum())
+@pandas_udf(df.schema, functionType=PandasUDFType.GROUPED_MAP)
+def transform_df_to_udf(pdf):
+    return transformation_df(pdf)
 
-# pandas version
-df.dropna(how='any', inplace=True)
+df_spark = df.apply(transform_df_to_udf)
 
-# axis ->
-#   0 or ‘index’ : Drop rows which contain missing values.
-#   1 or ‘columns’ : Drop columns which contain missing value.
-#
-# how ->
-#   ‘any’ : If any NA values are present, drop that row or column.
-#   ‘all’ : If all values are NA, drop that row or column.
-
-print(df.isnull().sum())
-
-end = time.time()
-print(" HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY " + str(end - start) )
-
-df_spark = spark.createDataFrame(df)
 
 df_spark.write\
 .format("parquet").mode("overwrite")\
 .option("path", "hdfs://localhost:9000/user/hadoop_ADMIN/spark/SQL_to_parquet/")\
 .partitionBy("City")\
 .save()
+
+
