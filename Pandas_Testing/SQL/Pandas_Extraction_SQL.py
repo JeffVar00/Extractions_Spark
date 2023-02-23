@@ -4,7 +4,7 @@ import pandas as pd
 import time
 #from sqlalchemy import create_engine, text
 
-spark = SparkSession.builder.appName("SQL/Pandas to HDFS").getOrCreate()
+spark = SparkSession.builder.appName("SQL/Pandas to HDFS").getOrCreate().master("spark://localhost:7077")
 
 start = time.time()
 

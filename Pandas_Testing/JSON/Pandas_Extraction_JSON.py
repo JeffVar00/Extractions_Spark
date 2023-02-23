@@ -3,7 +3,7 @@ import pandas as pd
 import time
 
 # SparkSession
-spark = SparkSession.builder.appName("JSON/Pandas to HDFS").getOrCreate()
+spark = SparkSession.builder.appName("JSON/Pandas to HDFS").getOrCreate().master("spark://localhost:7077")
 
 start = time.time()
 

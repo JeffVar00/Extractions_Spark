@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 import pandas as pd
 
 # SparkSession
-spark = SparkSession.builder.appName("CSV/Pandas to HDFS").getOrCreate()
+spark = SparkSession.builder.appName("CSV/Pandas to HDFS").getOrCreate().master("spark://localhost:7077")
 
 # read JSON file into a DataFrame using pandas
 df = pd.read_csv("Friends.csv")
