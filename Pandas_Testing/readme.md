@@ -33,6 +33,16 @@
 
 # Load SQL from the database in Pandas
 
+# dropna
+
+# axis ->
+#   0 or ‘index’ : Drop rows which contain missing values.
+#   1 or ‘columns’ : Drop columns which contain missing value.
+#
+# how ->
+#   ‘any’ : If any NA values are present, drop that row or column.
+#   ‘all’ : If all values are NA, drop that row or column.
+
 <!-- username='jeff'
 password='1234'
 host='172.17.80.1'
