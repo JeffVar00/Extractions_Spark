@@ -1,44 +1,44 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import pandas_udf, PandasUDFType
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, TimestampType
-# import pandas as pd
+import pandas as pd
 from datetime import datetime
 
 # SparkSession
 spark = SparkSession.builder.appName("CSV/Pandas to HDFS").master("spark://localhost:7077").getOrCreate()
 
-# pandas transformation from the pyspark trasnformation I did in the previous snippet
-def transform_df(df):
+df = spark.read.csv("Friends.csv", header=True, inferSchema=True)
+
+schema = StructType([StructField("userID", IntegerType()), StructField("name", StringType()), StructField("age", IntegerType()), StructField("friends", IntegerType()), StructField("date_time", TimestampType())])
+
+@pandas_udf(schema, functionType=PandasUDFType.GROUPED_MAP)
+def fill_nulls(df: pd.DataFrame) -> pd.DataFrame:
 
     # replace null values in specific columns with a default value
     default_values = {'name' : "Unknown"}
-    df.fillna(value=default_values, inplace=True)
+    df.fillna(default_values, inplace=True)
+    df.fillna("N/A", inplace=True)
 
-    # interpolate the age column
-    df["age"] = df["age"].interpolate(method="linear")
+    # filering the data
+    df = df[df['age'] < 40]
+    df['date_time'] = datetime.now()
+    df.sort_values(by=['userID'])
 
-    # fill the rest of the columns with a N/A value
-    df.fillna(value="N/A", inplace=True)
+    return df
 
-    df_pandas = df[['userID', 'name', 'age', 'friends']]
-    df_pandas = df_pandas[df_pandas['age'] < 30]
-    df_pandas['insert_ts'] = datetime.now()
-    df_pandas = df_pandas.sort_values(by=['userID'])
-    df_pandas = df_pandas.reset_index(drop=True)
+@pandas_udf("integer", PandasUDFType.SCALAR)
+def interpolate_age(age: pd.Series) -> pd.Series:
+    age = pd.to_numeric(age, errors='coerce')
+    return age.interpolate(method='linear')
 
-    return df_pandas
+# SCALAR_ITER : A scalar iterator is a Python generator that takes one row at a time and returns one row at a time.
+# SCALAR : A scalar function is a Python function that takes one row as input and returns one row as output.
+# GROUPED_MAP : A grouped map function is a Python function that takes one group at a time and returns one row at a time.
+# GROUPED_AGG : A grouped aggregate function is a Python function that takes one group at a time and returns one aggregated value at a time.
 
-df = spark.read.csv("Friends.csv", header=True, inferSchema=True)
-
-schema = StructType([StructField("userID", IntegerType()), StructField("name", StringType()), StructField("age", IntegerType()), StructField("friends", IntegerType()), StructField("insert_ts", TimestampType())])
-
-# transform into a spark dataframe to upload it to HDFS
-@pandas_udf(schema, functionType=PandasUDFType.GROUPED_MAP)
-def transform_df_to_udf(pdf):
-    # apply the transformation
-    return transform_df(pdf)
-
-df = df.groupby("userID").apply(transform_df_to_udf)
+df = df.withColumn('age', interpolate_age(df['age']))
+df = df.groupby().apply(fill_nulls)
+df.show()
 
 # write the DataFrame to HDFS
 df.write\

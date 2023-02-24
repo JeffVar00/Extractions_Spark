@@ -7,23 +7,21 @@ spark = SparkSession.builder.appName("CSV to HDFS").master("spark://localhost:70
 # read CSV file into a DataFrame
 df = spark.read.csv("Friends.csv", header=True, inferSchema=True)
 
-# show the DataFrame
-df.printSchema()
-df.show()
-
 # fill null values with default value
 df = df.fillna(value="Unknown", subset=["name"]).fillna(value=30, subset=["age"])
 df = df.fillna("N/A")
 
 # transformation example
-output = df.select(df.userID,df.name\
+df = df.select(df.userID,df.name\
          ,df.age,df.friends)\
-         .where(df.age < 30 ).withColumn('insert_ts', func.current_timestamp())\
+         .where(df.age < 40 ).withColumn('insert_ts', func.current_timestamp())\
          .orderBy(df.userID).cache()
 
-# show the DataFrame
-output.createOrReplaceTempView("peoples")
-spark.sql("select userID, name from peoples where friends > 100 order by userID").show()
+# debugging
+df.show()
+
+# df.createOrReplaceTempView("peoples")
+# spark.sql("select userID, name, age from peoples where friends > 100 order by userID").show()
 
 # write the DataFrame to HDFS as parquet
 df.write\
