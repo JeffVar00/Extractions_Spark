@@ -7,32 +7,34 @@ spark = SparkSession.builder.appName("JSON/Pandas to HDFS").master("spark://loca
 # read JSON file into a DataFrame using pandas
 # df = pd.read_json("Employees.json")
 
-def transform_df(df):
+df = spark.read.option("inferSchema", "true").option("header", "true").option("multiline","true").json("Employees.json")
 
-    print(df.head(10))
-    print(df.isnull().sum())
+@pandas_udf("integer", PandasUDFType.SCALAR)
+def fill_nulls_with_mean_age(age):
+
+    # Compute the mean age excluding null values
+    mean_age = age.mean(skipna=True)
+    # Fill null values with the mean age
+    age.fillna(mean_age, inplace=True)
+
+    return age
+
+@pandas_udf(df.schema, functionType=PandasUDFType.GROUPED_MAP)
+def fill_nulls(df):
 
     # replace null values in specific columns with a default value
     default_values = {'name' : "Unknown", "department": 'Unspecified'}
     df.fillna(value=default_values, inplace=True)
 
-    # fill the missing values in the age column with the mean of that column, you can use also Min and Max.
-    df["age"].fillna(value=df["age"].mean(numeric_only=True), inplace=True)
-
     # fill the rest of the columns with a N/A value
     df.fillna(value="N/A", inplace=True)
 
-    print(df.isnull().sum())
-
     return df
 
-df = spark.read.option("inferSchema", "true").option("header", "true").option("multiline","true").json("Employees.json")
+df = df.withColumn('age', fill_nulls_with_mean_age(df['age']))
+df = df.groupby().apply(fill_nulls)
 
-@pandas_udf(df.schema, functionType=PandasUDFType.GROUPED_MAP)
-def transform_df_to_udf(pdf):
-    return transform_df(pdf)
-
-df = df.apply(transform_df_to_udf)
+df.show()
 
 df.write\
 .format("parquet").mode("overwrite")\
