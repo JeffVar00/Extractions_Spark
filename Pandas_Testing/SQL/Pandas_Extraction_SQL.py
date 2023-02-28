@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 import pyodbc
 from pyspark.sql.functions import pandas_udf, PandasUDFType
+import pandas as pd
 
 #from sqlalchemy import create_engine, text
 
@@ -19,7 +20,7 @@ df = spark.read.format("jdbc")\
     .load()
 
 @pandas_udf(df.schema, functionType=PandasUDFType.GROUPED_MAP)
-def drop_nulls(df):
+def drop_nulls(df: pd.DataFrame) -> pd.DataFrame:
     df.dropna(how='any', inplace=True)
     return df
 
