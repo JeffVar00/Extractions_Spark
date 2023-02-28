@@ -43,6 +43,22 @@
 #   ‘any’ : If any NA values are present, drop that row or column.
 #   ‘all’ : If all values are NA, drop that row or column.
 
+###
+
+<!-- SCALAR: las funciones de usuario definidas por Pandas que operan en una fila de entrada y devuelven una fila de salida. En otras palabras, las funciones de usuario que toman un conjunto de valores de entrada (en forma de una fila de DataFrame) y producen un único valor de salida (en forma de una columna de DataFrame).
+
+SCALAR_ITER: las funciones de usuario definidas por Pandas que operan en un conjunto de filas de entrada y devuelven un conjunto de filas de salida. En otras palabras, las funciones de usuario que toman un conjunto de valores de entrada (en forma de un conjunto de filas de DataFrame) y producen un conjunto de valores de salida (en forma de una o varias columnas de DataFrame).
+
+GROUPED MAP: Se utiliza para aplicar una función de usuario definida por Pandas a cada grupo de filas de un DataFrame de PySpark que comparten una clave común. Es útil para operaciones que implican una agrupación de datos en PySpark, como el cálculo de agregaciones por grupos o el procesamiento de ventanas.
+
+MAP: la función definida por el usuario toma como entrada una columna de un DataFrame de PySpark y devuelve otra columna de PySpark. Se utiliza para aplicar una función de usuario definida por Pandas a una sola columna de un DataFrame de PySpark.
+
+CROSS JOIN: la función definida por el usuario toma dos DataFrames de PySpark y devuelve otro DataFrame de PySpark. Se utiliza para aplicar una función de usuario definida por Pandas a todas las combinaciones posibles de filas de dos DataFrames de PySpark.
+
+GROUPED AGG: la función definida por el usuario toma como entrada un DataFrame de PySpark agrupado y devuelve otro DataFrame de PySpark. Se utiliza para aplicar una función de usuario definida por Pandas a cada grupo de filas de un DataFrame de PySpark y devolver un DataFrame de PySpark que representa el resultado de aplicar la transformación a todos los grupos. -->
+
+###
+
 <!-- username='jeff'
 password='1234'
 host='172.17.80.1'
