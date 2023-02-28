@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import pandas_udf, PandasUDFType
+import pandas as pd
 
 # SparkSession
 spark = SparkSession.builder.appName("JSON/Pandas to HDFS").master("spark://localhost:7077").getOrCreate()
@@ -10,7 +11,7 @@ spark = SparkSession.builder.appName("JSON/Pandas to HDFS").master("spark://loca
 df = spark.read.option("inferSchema", "true").option("header", "true").option("multiline","true").json("Employees.json")
 
 @pandas_udf("integer", PandasUDFType.SCALAR)
-def fill_nulls_with_mean_age(age):
+def fill_nulls_with_mean_age(age: pd.Series) -> pd.Series:
 
     # Compute the mean age excluding null values
     mean_age = age.mean(skipna=True)
@@ -20,7 +21,7 @@ def fill_nulls_with_mean_age(age):
     return age
 
 @pandas_udf(df.schema, functionType=PandasUDFType.GROUPED_MAP)
-def fill_nulls(df):
+def fill_nulls(df: pd.DataFrame) -> pd.DataFrame:
 
     # replace null values in specific columns with a default value
     default_values = {'name' : "Unknown", "department": 'Unspecified'}
